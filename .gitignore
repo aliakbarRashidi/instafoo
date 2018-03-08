@@ -1,6 +1,7 @@
 # working data
 profiles/
 userdata/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

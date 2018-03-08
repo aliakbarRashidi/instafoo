@@ -10,7 +10,10 @@ name = "pypi"
 pandas = "*"
 argparse = "*"
 sqlalchemy = "*"
-instagram_private_api = {git = "https://git@github.com/ping/instagram_private_api.git"}
+instagram-private-api = {git = "https://git@github.com/ping/instagram_private_api.git"}
+mysqlclient = "*"
+pylint = "*"
+datetime = "*"
 
 
 [dev-packages]
