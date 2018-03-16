@@ -6,14 +6,16 @@ create database insta_crawl character set UTF8mb4 collate utf8mb4_unicode_ci;
 CREATE TABLE insta_crawl.users (
 	user_id bigint not null unique primary key
 	, user_name varchar(128) not null unique key
+	, full_name varchar(2080)
 	, follower_count bigint
 	, following_count bigint
 	, bio varchar(5000) COLLATE utf8mb4_unicode_ci
+	, external_url varchar(2080) COLLATE utf8mb4_unicode_ci
 	, city_id varchar(2080)
 	, email varchar(2080)
 	, phone varchar(2080)
-	-- , latitude float
-	-- , longitude float
+	, latitude float
+	, longitude float
 	, crawl_date datetime
 	, mod_ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e234a5733f050a6974a0c2bd80cb3194947666375137dcc755a55b8d0e7fb119"
+            "sha256": "301db6af308a7b0f6fdf7644ad5525e1f09dbf759ac11f50192ebc159cb218b9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -179,6 +179,12 @@
                 "sha256:c372db80a5bcb143c9cb254d50f902772c3b093a4f965275197ec2d2184b1e61"
             ],
             "version": "==0.22.0"
+        },
+        "py2neo": {
+            "hashes": [
+                "sha256:8177a9b2c4d23a3ce26f02d3d6be92ac49cb7520e88ec1b41d8c6e86774938b8"
+            ],
+            "version": "==3.1.2"
         },
         "pylint": {
             "hashes": [
