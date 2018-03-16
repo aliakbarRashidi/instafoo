@@ -11,9 +11,6 @@ import instapi as ia
 import basic_crawler as bc
 import insta_data_model as idm
 
-logging.basicConfig(filename='main.log')
-logger = logging.getLogger('instafoo')
-
 def sanitize_inputs(*args):
     for arg in args:
         if arg == '':
@@ -40,7 +37,6 @@ class MySQL_Worker(object):
         self._mysql_initizlized = True
     
     def write_record(self, user_profile, mode):
-        logger.debug('writing record: %s' % user_profile)
         '''TODO add try/except duplicate since it's likely that ppl will be following/follow eachother'''
         self.user_profile = user_profile
         if mode == 'seed':
@@ -107,7 +103,6 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
     def _add_follower_folling(list_of_ppl, existing_users, added_users):
         for f in list_of_ppl:
             fp = idm.parse_insta_user_obj(f)
-            logger.debug('got follower/following for %s' % fp)
             fp_uid = fp.get('user_id')
             if fp_uid in added_users or fp_uid in existing_users.values:
                 continue
@@ -185,6 +180,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     settings_file = args.settings_file_path
 
+    logging.basicConfig()
+    logger = logging.getLogger('instafoo')
     if args.debug:
         logger.setLevel(logging.DEBUG)
     
@@ -208,7 +205,7 @@ if __name__ == '__main__':
         seed(args.target)
     elif args.mode == 'crawl':
         logger.debug('starting crawl')
-        crawl_db(max_crawl=1, crawl_recursively=True, debug=args.debug)
+        crawl_db(max_crawl=999, crawl_recursively=True, debug=args.debug)
     else:
         logger.error('bad method')
         raise Exception('Bad method')

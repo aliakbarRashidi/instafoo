@@ -25,7 +25,6 @@ def run_result_loop(method, user_id, api, max_count=1000):
         results = action(user_id, max_id=next_max_id)
         user_list.extend(results.get('users', []))
         next_max_id = results.get('next_max_id')
-        logger.debug('current user list length: %s' %len(user_list))
 
     user_list.sort(key=lambda x: x['pk'])
     return user_list
@@ -35,11 +34,8 @@ def bc_main(api, user_id, debug):
     if debug:
         logger.setLevel(logging.DEBUG)
 
-    logger.debug('getting user_profile')
     user_profile = extract_user_info(user_id, api)
-    logger.debug('getting followers')
     followers = run_result_loop('followers', user_id, api)
-    logger.debug('getting following')
     following = run_result_loop('following', user_id, api)
     
     # validation
