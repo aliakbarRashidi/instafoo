@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 import insta_data_model as idm
 
 logging.basicConfig()
@@ -12,6 +11,7 @@ def extract_user_info(user_id, api):
 def run_result_loop(method, user_id, api, max_count=1000):
     user_list = []
     if method == 'followers':
+        raise Exception ('I disabled this method')
         action = api.user_followers
     if method == 'following':
         action = api.user_following
@@ -20,7 +20,6 @@ def run_result_loop(method, user_id, api, max_count=1000):
     logger.debug('got initial results')
     user_list.extend(results.get('users', []))
     next_max_id = results.get('next_max_id')
-    
     while next_max_id and len(user_list) < max_count:
         results = action(user_id, max_id=next_max_id)
         user_list.extend(results.get('users', []))
@@ -35,14 +34,14 @@ def bc_main(api, user_id, debug):
         logger.setLevel(logging.DEBUG)
 
     user_profile = extract_user_info(user_id, api)
-    followers = run_result_loop('followers', user_id, api)
+    #followers = run_result_loop('followers', user_id, api)
     following = run_result_loop('following', user_id, api)
-    
     # validation
     try:
-        assert abs(len(followers)-user_profile['follower_count']) < 2
+        #assert abs(len(followers)-user_profile['follower_count']) < 2
         assert abs(len(following)-user_profile['following_count']) < 2
     except:
-        logger.warn('discrepancy between crawled followers and reported followers for %s\n' % user_profile)
-
-    return user_profile, followers, following
+        logger.warn('discrepancy between crawled followers and reported followers for %s\n'\
+         % user_profile)
+    followers = []
+    return user_profile, following, followers

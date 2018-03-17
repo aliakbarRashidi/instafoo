@@ -120,7 +120,7 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
     existing_users = _fetch_existing_users()
     logger.debug('got existing users')
     added_users = []
-    user_profile, followers, following=bc.bc_main(api, user_id, debug=debug)
+    user_profile, following, followers=bc.bc_main(api, user_id, debug=debug)
     logger.debug('got user profile', user_profile)
     user_profile.update({'user_id': user_id, 'user_name': user_name, 'full_name':full_name})
 
@@ -135,7 +135,7 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
     added_users.append(user_profile.get('user_id'))
     
     _add_follower_folling(following, existing_users, added_users)
-    _add_follower_folling(followers, existing_users, added_users)
+    #_add_follower_folling(followers, existing_users, added_users)
 
 
 def seed(target):
