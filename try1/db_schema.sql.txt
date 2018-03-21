@@ -1,5 +1,6 @@
-create database insta_crawl character set UTF8mb4 collate utf8mb4_unicode_ci;
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+create database insta_crawl character set UTF8mb4 collate utf8mb4_unicode_ci;
 
 -- drop table if exists insta_crawl.users;
 
@@ -18,5 +19,10 @@ CREATE TABLE insta_crawl.users (
 	, longitude float
 	, crawl_date datetime
 	, mod_ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+;	
+
+CREATE TABLE insta_crawl.terms (
+	 term varchar(500) key collate utf8mb4_unicode_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;	

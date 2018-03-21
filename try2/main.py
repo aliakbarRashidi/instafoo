@@ -32,11 +32,11 @@ if __name__ == '__main__':
 	config = {
 		'search_algorithm' : 'BFS',               # Possible values: BFS, DFS
 		'profile_path' : './profiles',              # Path where output data gets saved
-		'max_followers' : 2, # 10,                    # How many followers per user to collect
-		'max_following' : 2, #15,                    # how many follows to collect per user
+		'max_followers' : 500, # 10,                    # How many followers per user to collect
+		'max_following' : 1, #15,                    # how many follows to collect per user
 		'min_collect_media' : 0, #10,                # how many media items to be collected per person/hashtag. If time is specified, this is ignored
 		'max_collect_media' : 0, #10,                # how many media items to be collected per person/hashtag. If time is specified, this is ignored
-		'max_collect_users' : 2, # 1000,               # how many users to collect in total.
+		'max_collect_users' : 10000, # 1000,               # how many users to collect in total.
 		# 'min_timestamp' : int(time() - 60*60*24*30*2)         # up to how recent you want the posts to be in seconds. If you do not want to use this, put None as value
 		'min_timestamp' : None
 	}

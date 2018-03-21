@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, exc
 import instapi as ia
 import basic_crawler as bc
 import insta_data_model as idm
+import exclude_from_crawl as ec
 
 def sanitize_inputs(*args):
     for arg in args:
@@ -97,21 +98,23 @@ class MySQL_Worker(object):
 def crawl_and_add(user_name, user_id, full_name, method, debug):
 
     def _fetch_existing_users():
-        existing_user_query = "select user_id from %s.users" % global_settings.get('db_name')
-        return pd.read_sql(existing_user_query, mysql_worker.dbengine)['user_id']
+        existing_user_query = "select user_name from %s.users" % global_settings.get('db_name')
+        existing_users = pd.read_sql(existing_user_query, mysql_worker.dbengine)['user_name']
+        exclude_users = ec.user_names
+        return existing_users.append(pd.Series(ec.user_names))
     
     def _add_follower_folling(list_of_ppl, existing_users, added_users):
         for f in list_of_ppl:
             fp = idm.parse_insta_user_obj(f)
-            fp_uid = fp.get('user_id')
-            if fp_uid in added_users or fp_uid in existing_users.values:
+            fp_uname = fp.get('user_name')
+            if fp_uname in added_users or fp_uname in existing_users.values:
                 continue
             try:
                 mysql_worker.write_record(fp, 'seed')
             except:
                 import ipdb;ipdb.set_trace()
             #user1_in_graph = graph_worker.write_record(user_profile)
-            added_users.append(fp_uid)
+            added_users.append(fp_uname)
             '''TODO: Need to think about the logic for adding nodes/edges if already in the mysql db. 
             Though we have the record, we don't have the graph relationship
             If the UID is in MySQL, don't add to MySQL, but continue to graph
@@ -120,12 +123,11 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
     existing_users = _fetch_existing_users()
     logger.debug('got existing users')
     added_users = []
-    user_profile, following, followers=bc.bc_main(api, user_id, debug=debug)
-    logger.debug('got user profile', user_profile)
+    user_profile, following, followers=insta_crawler.bc_main(user_id, debug=debug)
     user_profile.update({'user_id': user_id, 'user_name': user_name, 'full_name':full_name})
 
     if method == 'seed':
-        if user_profile['user_id'] in existing_users.values:
+        if user_profile['user_name'] in existing_users.values:
             logger.warn('crawl_and_add\Seed: user already in DB\n\n%s' % user_profile)
             return 
         mysql_worker.write_record(user_profile, 'seed')
@@ -139,10 +141,12 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
 
 
 def seed(target):
-    origin = api.username_info(target)
-    user_id = origin['user'].get('pk')
-    full_name = origin['user'].get('full_name') 
-    crawl_and_add(target,user_id,full_name, method='seed', debug=args.debug)
+    origin = insta_crawler.extract_user_info_from_username(target)
+    #user_name = origin.get('user_name')
+    #user_id = origin.get('user_id')
+    #full_name = origin.get('full_name') 
+    #crawl_and_add(user_name,user_id,full_name, method='seed', debug=args.debug)
+    mysql_worker.write_record(origin, 'seed')
         
 
 def crawl_db(max_crawl, crawl_recursively, debug):
@@ -175,7 +179,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--settings',
                         dest='settings_file_path', type=str, required=True)
     parser.add_argument('-m', '--mode', dest='mode', type=str, required=True)
-    parser.add_argument('-t', '--target', dest='target', type=str, default='roablep')
+    parser.add_argument('-t', '--target', dest='target', type=str)
 
     args = parser.parse_args()
     settings_file = args.settings_file_path
@@ -198,10 +202,12 @@ if __name__ == '__main__':
         global_settings.get('insta_pass')
         )
     
+    insta_crawler = bc.InstaCrawler(api)
+    
     mysql_worker = MySQL_Worker()
 
     if args.mode == 'seed':
-        logger.debug('starting seed')
+        logger.debug('starting seed with %s' % args.target)
         seed(args.target)
     elif args.mode == 'crawl':
         logger.debug('starting crawl')
