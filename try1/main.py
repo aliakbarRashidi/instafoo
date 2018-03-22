@@ -141,6 +141,8 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
 
 
 def seed(target):
+    if target is None:
+        raise Exception('No seed user specified')
     origin = insta_crawler.extract_user_info_from_username(target)
     #user_name = origin.get('user_name')
     #user_id = origin.get('user_id')
