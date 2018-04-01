@@ -26,3 +26,9 @@ CREATE TABLE insta_crawl.terms (
 	 term varchar(500) key collate utf8mb4_unicode_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;	
+
+CREATE TABLE insta_crawl.exclude_users (
+	user_id bigint not null unique primary key
+	, user_name varchar(128) not null unique key
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+;	

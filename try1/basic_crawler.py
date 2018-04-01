@@ -18,7 +18,7 @@ class InstaCrawler(object):
         try:
             user_info = self.api.username_info(username)
         except ClientThrottledError:
-            print('Got the right except in username')
+            print('some throttling error')
             print(self.n_crawls, self.last_crawl_time-self.init_time, (self.last_crawl_time-self.init_time)/self.n_crawls)
         self.last_crawl_time = time.time()
         self.n_crawls += 1

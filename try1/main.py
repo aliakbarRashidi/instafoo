@@ -97,26 +97,43 @@ class MySQL_Worker(object):
 
 def crawl_and_add(user_name, user_id, full_name, method, debug):
 
+    def _update_excluded_users():
+        excluded_user_names = set(ec.user_names)
+        exclude_user_query = "select user_id from %s.exclude_users" % global_settings.get('db_name')
+        existing_user_db = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_id'].values
+        base_query = """insert into %s.exclude_users (user_id,user_name)""" % global_settings.get('db_name')
+        for user in excluded_user_names:
+            if user in existing_user_db:
+                continue
+            user_id = insta_crawler.extract_user_info_from_username(user)['user_id']
+            try:
+                mysql_worker.dbengine.execute(base_query + """values (%s, %s)""" , (user_id, user))
+            except exc.IntegrityError as e:
+                print (e)
+                pass
+
     def _fetch_existing_users():
-        existing_user_query = "select user_name from %s.users" % global_settings.get('db_name')
-        existing_users = pd.read_sql(existing_user_query, mysql_worker.dbengine)['user_name']
-        exclude_users = ec.user_names
-        return existing_users.append(pd.Series(ec.user_names))
+        existing_user_query = "select user_id from %s.users" % global_settings.get('db_name')
+        exclude_user_query = "select user_id from %s.exclude_users" % global_settings.get('db_name')
+        existing_users = pd.read_sql(existing_user_query, mysql_worker.dbengine)['user_id']
+        exclude_users = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_id']
+        return existing_users.append(exclude_users)
     
     def _add_follower_folling(list_of_ppl, existing_users, added_users):
         for f in list_of_ppl:
             fp = idm.parse_insta_user_obj(f)
-            fp_uname = fp.get('user_name')
-            if fp_uname in added_users or fp_uname in existing_users.values:
+            fp_uid = fp.get('user_id')
+            if fp_uid in added_users or fp_uid in existing_users.values:
                 continue
             mysql_worker.write_record(fp, 'seed')
             #user1_in_graph = graph_worker.write_record(user_profile)
-            added_users.append(fp_uname)
+            added_users.append(fp_uid)
             '''TODO: Need to think about the logic for adding nodes/edges if already in the mysql db. 
             Though we have the record, we don't have the graph relationship
             If the UID is in MySQL, don't add to MySQL, but continue to graph
             '''
 
+    _update_excluded_users()
     existing_users = _fetch_existing_users()
     logger.debug('got existing users')
     added_users = []
@@ -124,14 +141,14 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
     user_profile.update({'user_id': user_id, 'user_name': user_name, 'full_name':full_name})
 
     if method == 'seed':
-        if user_profile['user_name'] in existing_users.values:
+        if user_profile['user_id'] in existing_users.values:
             logger.error('crawl_and_add\Seed: user already in DB\n\n%s' % user_profile)
             return 
         mysql_worker.write_record(user_profile, 'seed')
     if method == 'crawl':
         mysql_worker.update_record(user_profile)
     #graph_worker.write_record(user_profile)
-    added_users.append(user_profile.get('user_name'))
+    added_users.append(user_profile.get('user_id'))
     
     _add_follower_folling(following, existing_users, added_users)
     #_add_follower_folling(followers, existing_users, added_users)
