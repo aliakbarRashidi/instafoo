@@ -1,4 +1,7 @@
-user_names = ['kevin','mikeyk',
+user_names = [
+'jack',
+'kevin',
+'mikeyk',
 'instagram',
 'arianagrande',
 'therock',

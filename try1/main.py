@@ -109,10 +109,7 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
             fp_uname = fp.get('user_name')
             if fp_uname in added_users or fp_uname in existing_users.values:
                 continue
-            try:
-                mysql_worker.write_record(fp, 'seed')
-            except:
-                import ipdb;ipdb.set_trace()
+            mysql_worker.write_record(fp, 'seed')
             #user1_in_graph = graph_worker.write_record(user_profile)
             added_users.append(fp_uname)
             '''TODO: Need to think about the logic for adding nodes/edges if already in the mysql db. 
@@ -128,13 +125,13 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
 
     if method == 'seed':
         if user_profile['user_name'] in existing_users.values:
-            logger.warn('crawl_and_add\Seed: user already in DB\n\n%s' % user_profile)
+            logger.error('crawl_and_add\Seed: user already in DB\n\n%s' % user_profile)
             return 
         mysql_worker.write_record(user_profile, 'seed')
     if method == 'crawl':
         mysql_worker.update_record(user_profile)
     #graph_worker.write_record(user_profile)
-    added_users.append(user_profile.get('user_id'))
+    added_users.append(user_profile.get('user_name'))
     
     _add_follower_folling(following, existing_users, added_users)
     #_add_follower_folling(followers, existing_users, added_users)
@@ -151,7 +148,7 @@ def seed(target):
     mysql_worker.write_record(origin, 'seed')
         
 
-def crawl_db(max_crawl, crawl_recursively, debug):
+def crawl(max_crawl, crawl_recursively, debug):
     def _fetch_crawl_queue():
         crawl_queue_query = "select * from %s.users where crawl_date is null order by mod_ts" % global_settings.get('db_name')
         return pd.read_sql(crawl_queue_query, mysql_worker.dbengine)
@@ -213,7 +210,7 @@ if __name__ == '__main__':
         seed(args.target)
     elif args.mode == 'crawl':
         logger.debug('starting crawl')
-        crawl_db(max_crawl=999, crawl_recursively=True, debug=args.debug)
+        crawl(max_crawl=999, crawl_recursively=True, debug=args.debug)
     else:
         logger.error('bad method')
         raise Exception('Bad method')
