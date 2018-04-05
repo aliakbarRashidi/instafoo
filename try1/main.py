@@ -97,21 +97,6 @@ class MySQL_Worker(object):
 
 def crawl_and_add(user_name, user_id, full_name, method, debug):
 
-    def _update_excluded_users():
-        excluded_user_names = set(ec.user_names)
-        exclude_user_query = "select user_id from %s.exclude_users" % global_settings.get('db_name')
-        existing_user_db = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_id'].values
-        base_query = """insert into %s.exclude_users (user_id,user_name)""" % global_settings.get('db_name')
-        for user in excluded_user_names:
-            if user in existing_user_db:
-                continue
-            user_id = insta_crawler.extract_user_info_from_username(user)['user_id']
-            try:
-                mysql_worker.dbengine.execute(base_query + """values (%s, %s)""" , (user_id, user))
-            except exc.IntegrityError as e:
-                print (e)
-                pass
-
     def _fetch_existing_users():
         existing_user_query = "select user_id from %s.users" % global_settings.get('db_name')
         exclude_user_query = "select user_id from %s.exclude_users" % global_settings.get('db_name')
@@ -133,7 +118,6 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
             If the UID is in MySQL, don't add to MySQL, but continue to graph
             '''
 
-    _update_excluded_users()
     existing_users = _fetch_existing_users()
     logger.debug('got existing users')
     added_users = []
@@ -169,8 +153,24 @@ def crawl(max_crawl, crawl_recursively, debug):
     def _fetch_crawl_queue():
         crawl_queue_query = "select * from %s.users where crawl_date is null order by mod_ts" % global_settings.get('db_name')
         return pd.read_sql(crawl_queue_query, mysql_worker.dbengine)
-        
+ 
+    def _update_excluded_users():
+        excluded_user_names = set(ec.user_names)
+        exclude_user_query = "select user_name from %s.exclude_users" % global_settings.get('db_name')
+        existing_user_db = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_name'].values
+        base_query = """insert into %s.exclude_users (user_id,user_name)""" % global_settings.get('db_name')
+        for user in excluded_user_names:
+            if user in existing_user_db:
+                continue
+            user_id = insta_crawler.extract_user_info_from_username(user)['user_id']
+            try:
+                mysql_worker.dbengine.execute(base_query + """values (%s, %s)""" , (user_id, user))
+            except exc.IntegrityError as e:
+                print (e)
+                pass        
+    
     crawl_queue = _fetch_crawl_queue()
+    _update_excluded_users()
 
     if len(crawl_queue) == 0:
         logger.warn('crawl_queue is empty')
