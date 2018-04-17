@@ -19,6 +19,7 @@ CREATE TABLE insta_crawl.users (
 	, longitude float
 	, crawl_date datetime
 	, mod_ts timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	, index crawl_date_ndx (crawl_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;	
 
@@ -31,4 +32,38 @@ CREATE TABLE insta_crawl.exclude_users (
 	user_id bigint not null unique primary key
 	, user_name varchar(128) not null unique key
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-;	
+;
+
+CREATE TABLE insta_crawl.fitness_influencers (
+	user_id bigint not null unique primary key
+	, user_name varchar(128) not null unique key
+	, full_name varchar(2080)
+	, follower_count bigint
+	, following_count bigint
+	, bio varchar(5000) COLLATE utf8mb4_unicode_ci
+	, external_url varchar(2080) COLLATE utf8mb4_unicode_ci
+	, city_id varchar(2080)
+	, email varchar(2080)
+	, phone varchar(2080)
+	, latitude float
+	, longitude float
+	, crawl_date datetime
+	, mod_ts timestamp 
+	, index crawl_date_ndx (crawl_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+;
+
+CREATE TABLE insta_crawl.crm (
+	user_id bigint not null unique primary key
+	, user_name varchar(128) not null unique key
+	, full_name varchar(2080)
+	, email varchar(2080)
+	, sells_something varchar(10)
+	, contacted varchar(10)
+	, first_name varchar(50)
+	, email_template varchar(2080)
+	, comments varchar(2080)
+	, date_added date 
+	, dist_id int
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+;
