@@ -206,12 +206,10 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
     
     if not os.path.isfile(settings_file):
-        print('Unable to find file: {0!s}'.format(settings_file))
+        logger.error('Unable to find file: {0!s}'.format(settings_file))
     else:
         with open(settings_file) as file_data:
             global_settings = json.load(file_data)
-    
-    logger.debug('starting insta api connection')
     api = ia.main(global_settings.get('debug'),
         global_settings.get('insta_settings_file_path'),
         global_settings.get('insta_user'),
