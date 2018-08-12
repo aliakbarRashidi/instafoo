@@ -163,8 +163,8 @@ def crawl(max_crawl, crawl_recursively, debug):
         exclude_user_ids = set(exclude_from_crawl.user_ids)
 
         crawl_queue = crawl_queue_table[~crawl_queue_table['user_id'].isin(exclude_user_ids)]
-        crawl_queue = crawl_queue_table[~crawl_queue_table['user_name'].isin(exclude_user_names)]
-
+        crawl_queue = crawl_queue[~crawl_queue['user_name'].isin(exclude_user_names)]
+    
         return crawl_queue
  
     def _update_excluded_users():

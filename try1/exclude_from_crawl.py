@@ -102,7 +102,9 @@ user_names = [
 'drunkpeopledoingthings',
 'richardbranson',
 'tavicastro',
-'williamsfalade']
+'williamsfalade',
+'nicole',
+'josh']
 
 user_ids = [52797702]
 
