@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, exc
 import instapi as ia
 import basic_crawler as bc
 import insta_data_model as idm
-import exclude_from_crawl as ec
+import exclude_from_crawl
 
 def sanitize_inputs(*args):
     for arg in args:
@@ -101,14 +101,17 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
         existing_user_query = "select user_id from %s.users" % global_settings.get('db_name')
         exclude_user_query = "select user_id from %s.exclude_users" % global_settings.get('db_name')
         existing_users = pd.read_sql(existing_user_query, mysql_worker.dbengine)['user_id']
-        exclude_users = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_id']
-        return existing_users.append(exclude_users)
+        exclude_users1 = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_id']
+        exclude_users2 = exclude_from_crawl.user_ids
+        all_excluded = exclude_users1.tolist()
+        all_excluded.extend(exclude_users2)
+        return list(set(all_excluded))
     
     def _add_follower_folling(list_of_ppl, existing_users, added_users):
         for f in list_of_ppl:
             fp = idm.parse_insta_user_obj(f)
             fp_uid = fp.get('user_id')
-            if fp_uid in added_users or fp_uid in existing_users.values:
+            if fp_uid in added_users or fp_uid in existing_users:
                 continue
             mysql_worker.write_record(fp, 'seed')
             #user1_in_graph = graph_worker.write_record(user_profile)
@@ -151,17 +154,26 @@ def seed(target):
 
 def crawl(max_crawl, crawl_recursively, debug):
     def _fetch_crawl_queue():
-        crawl_queue_query = "select * from %s.users where crawl_date is null order by mod_ts" % global_settings.get('db_name')
-        return pd.read_sql(crawl_queue_query, mysql_worker.dbengine)
+        crawl_queue_query = "select * from {db}.users where crawl_date is null and user_id not in \
+        (select distinct user_id from {db}.exclude_users) and user_name not in (select distinct user_name \
+        from {db}.exclude_users) order by mod_ts".format(**{"db":global_settings.get('db_name')})
+        crawl_queue_table = pd.read_sql(crawl_queue_query, mysql_worker.dbengine)
+
+        excluded_user_names = set(exclude_from_crawl.user_names)
+        exclude_user_ids = set(exclude_from_crawl.user_ids)
+
+        crawl_queue = crawl_queue_table[~crawl_queue_table['user_id'].isin(exclude_user_ids)]
+        crawl_queue = crawl_queue_table[~crawl_queue_table['user_name'].isin(exclude_user_names)]
+
+        return crawl_queue
  
     def _update_excluded_users():
-        excluded_user_names = set(ec.user_names)
+        excluded_user_names = set(exclude_from_crawl.user_names)
         exclude_user_query = "select user_name from %s.exclude_users" % global_settings.get('db_name')
-        existing_user_db = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_name'].values
+        existing_user_db = set(pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_name'].values)
         base_query = """insert into %s.exclude_users (user_id,user_name)""" % global_settings.get('db_name')
-        for user in excluded_user_names:
-            if user in existing_user_db:
-                continue
+        to_add = excluded_user_names - existing_user_db
+        for user in to_add:
             user_id = insta_crawler.extract_user_info_from_username(user)['user_id']
             try:
                 mysql_worker.dbengine.execute(base_query + """values (%s, %s)""" , (user_id, user))
@@ -169,8 +181,9 @@ def crawl(max_crawl, crawl_recursively, debug):
                 print (e)
                 pass        
     
-    crawl_queue = _fetch_crawl_queue()
     _update_excluded_users()
+    crawl_queue = _fetch_crawl_queue()
+    
 
     if len(crawl_queue) == 0:
         logger.warn('crawl_queue is empty')
@@ -199,7 +212,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     settings_file = args.settings_file_path
-
+    
     logging.basicConfig()
     logger = logging.getLogger('instafoo')
     if args.debug:
@@ -210,6 +223,9 @@ if __name__ == '__main__':
     else:
         with open(settings_file) as file_data:
             global_settings = json.load(file_data)
+    
+    mysql_worker = MySQL_Worker()
+    
     api = ia.main(global_settings.get('debug'),
         global_settings.get('insta_settings_file_path'),
         global_settings.get('insta_user'),
@@ -218,8 +234,6 @@ if __name__ == '__main__':
     
     insta_crawler = bc.InstaCrawler(api)
     
-    mysql_worker = MySQL_Worker()
-
     if args.mode == 'seed':
         logger.debug('starting seed with %s' % args.target)
         seed(args.target)

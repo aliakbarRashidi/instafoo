@@ -1,7 +1,7 @@
 import logging
 import time
 import insta_data_model as idm
-from instagram_private_api.errors import ClientThrottledError
+from instagram_private_api.errors import ClientThrottledError, ClientError
 
 
 logging.basicConfig()
@@ -20,6 +20,10 @@ class InstaCrawler(object):
         except ClientThrottledError:
             print('some throttling error')
             print(self.n_crawls, self.last_crawl_time-self.init_time, (self.last_crawl_time-self.init_time)/self.n_crawls)
+        except ClientError:
+            logger.error('Client Error: %s' % username)
+            import ipdb;ipdb.set_trace()
+            return # probably buggy, also see line 40
         self.last_crawl_time = time.time()
         self.n_crawls += 1
         return idm.parse_insta_user_obj(user_info['user'])
@@ -30,6 +34,10 @@ class InstaCrawler(object):
         except ClientThrottledError:
             print('Got the right except in id')
             print(self.n_crawls, self.last_crawl_time-self.init_time, (self.last_crawl_time-self.init_time)/self.n_crawls)
+        except ClientError:
+            logger.error('Client Error: %s' % user_id)
+            import ipdb;ipdb.set_trace()
+            return
         self.last_crawl_time = time.time()
         self.n_crawls += 1
         return idm.parse_insta_user_obj(user_info['user'])

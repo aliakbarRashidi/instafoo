@@ -101,9 +101,10 @@ user_names = [
 'kylierae',
 'drunkpeopledoingthings',
 'richardbranson',
-'tavicastro']
+'tavicastro',
+'williamsfalade']
 
-user_ids = []
+user_ids = [52797702]
 
 '''
 select concat("'",user_name,"',") 
