@@ -103,7 +103,8 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
         existing_users = pd.read_sql(existing_user_query, mysql_worker.dbengine)['user_id']
         exclude_users1 = pd.read_sql(exclude_user_query, mysql_worker.dbengine)['user_id']
         exclude_users2 = exclude_from_crawl.user_ids
-        all_excluded = exclude_users1.tolist()
+        all_excluded = existing_users.tolist()
+        all_excluded.extend(exclude_users1.tolist())
         all_excluded.extend(exclude_users2)
         return list(set(all_excluded))
     
@@ -134,11 +135,9 @@ def crawl_and_add(user_name, user_id, full_name, method, debug):
         mysql_worker.write_record(user_profile, 'seed')
     if method == 'crawl':
         mysql_worker.update_record(user_profile)
-    #graph_worker.write_record(user_profile)
     added_users.append(user_profile.get('user_id'))
-    
     _add_follower_folling(following, existing_users, added_users)
-    #_add_follower_folling(followers, existing_users, added_users)
+    
 
 
 def seed(target):
