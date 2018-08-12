@@ -156,10 +156,10 @@ def crawl(max_crawl, crawl_recursively, debug):
     def _fetch_crawl_queue():
         crawl_queue_query = "select * from {db}.users where crawl_date is null and user_id not in \
         (select distinct user_id from {db}.exclude_users) and user_name not in (select distinct user_name \
-        from {db}.exclude_users) order by mod_ts".format(**{"db":global_settings.get('db_name')})
+        from {db}.exclude_users)".format(**{"db":global_settings.get('db_name')})
         crawl_queue_table = pd.read_sql(crawl_queue_query, mysql_worker.dbengine)
 
-        excluded_user_names = set(exclude_from_crawl.user_names)
+        exclude_user_names = set(exclude_from_crawl.user_names)
         exclude_user_ids = set(exclude_from_crawl.user_ids)
 
         crawl_queue = crawl_queue_table[~crawl_queue_table['user_id'].isin(exclude_user_ids)]
